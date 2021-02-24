@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateBeerRequest;
 use App\Http\Resources\BeerResource;
 use App\Models\Beer;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\File;
 
 class BeerManager implements BeerManagerInterface
 {
@@ -63,8 +64,9 @@ class BeerManager implements BeerManagerInterface
         $beer->fill($request->only(['title', 'description']));
 
         if ($request->hasFile('photo')) {
-            $fileName = $this->uploadImage($request);
+            $this->deleteImage($beer->photo);
 
+            $fileName    = $this->uploadImage($request);
             $beer->photo = $fileName;
         }
 
@@ -81,12 +83,13 @@ class BeerManager implements BeerManagerInterface
     public function delete(int $id): void
     {
         $beer = Beer::findOrFail($id);
+        $this->deleteImage($beer->photo);
 
         $beer->delete();
     }
 
     /**
-     * @param $request
+     * @param StoreBeerRequest|UpdateBeerRequest $request
      *
      * @return string
      */
@@ -99,5 +102,19 @@ class BeerManager implements BeerManagerInterface
         $file->move($path, $fileName);
 
         return $fileName;
+    }
+
+    /**
+     * @param string $fileName
+     *
+     * @return void
+     */
+    private function deleteImage(string $fileName): void
+    {
+        $path = public_path() . '/images/' . $fileName;
+
+        if (File::exists($path)) {
+            File::delete($path);
+        };
     }
 }
