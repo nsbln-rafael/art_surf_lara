@@ -19,3 +19,7 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('beers', AdminBeerController::class)
         ->except('show');
 });
+
+Route::apiResource('beers', ClientBeerController::class)
+    ->only(['index', 'show']);
+
